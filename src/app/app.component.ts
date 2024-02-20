@@ -162,4 +162,39 @@ export class AppComponent implements OnInit {
     this.chart1 = new Chart(chartElement, chartConfig);
     this.showChart = true;
   }
+
+  public addHardcodedBudget() {
+    this.addBudgetItemFormGroupWithValues("Hospital", 176, "2024-03-01");
+    this.addBudgetItemFormGroupWithValues("COTN", 39, "2024-03-03");
+    this.addBudgetItemFormGroupWithValues("Slate CC", 550, "2024-03-13");
+    this.addBudgetItemFormGroupWithValues("BCC Tuition", 280, "2024-03-15");
+    this.addBudgetItemFormGroupWithValues("WM", 80, "2024-03-22");
+    this.addBudgetItemFormGroupWithValues("Astound", 99, "2024-03-24");
+    this.addBudgetItemFormGroupWithValues("HELOC", 1500, "2024-03-25");
+    this.addBudgetItemFormGroupWithValues("Peninsula CC", 48, "2024-03-25");
+    this.addBudgetItemFormGroupWithValues("Cory's CC", 40, "2024-03-26");
+    this.addBudgetItemFormGroupWithValues("Student Loan", 166, "2024-03-28");
+    this.addBudgetItemFormGroupWithValues("Verizon", 60, "2024-03-29");
+    this.addBudgetItemFormGroupWithValues("Netflix", 13, "2024-03-29");
+    this.addIncomeFormGroupWithValues("Cory's paycheck", 2947, "2024-02-16");
+  }
+
+  private addBudgetItemFormGroupWithValues(title: string, payment: number, dueDate: string): void {
+    let formGroup = this.fb.group({
+      title: [title],
+      payment: [payment],
+      dueDate: [dueDate]
+    });
+    (this.financeForm.controls['BudgetItems'] as FormArray).push(formGroup);
+  }
+
+  private addIncomeFormGroupWithValues(title: string, payment: number, paymentReference: string): void {
+    let formGroup = this.fb.group({
+      title: [title],
+      amount: [payment],
+      frequency: ['biweekly'],
+      recentPaymentDate: [paymentReference]
+    });
+    (this.financeForm.controls['IncomeItems'] as FormArray).push(formGroup);
+  }
 }
