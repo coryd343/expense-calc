@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  finance-forecast:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
+    networks:
+      - angular-network
+
+networks:
+  angular-network:
+    driver: bridge

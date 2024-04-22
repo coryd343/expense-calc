@@ -35,39 +35,46 @@ export class AppComponent implements OnInit {
     return this.financeForm.controls["IncomeItems"] as FormArray;
   }
 
+  get oneTimePayments() {
+    return this.financeForm.controls["OneTimeItems"] as FormArray;
+  }
+
   ngOnInit() {
     this.financeForm = this.fb.group({
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
       startingBalance: ['', Validators.required],
       BudgetItems: this.fb.array([]),
-      IncomeItems: this.fb.array([])
+      IncomeItems: this.fb.array([]),
+      OneTimeItems: this.fb.array([])
     });
   }
 
-  addOngoingItemForm(type: 'budget' | 'income') {
-    let formGroup;
-    if (type === 'budget') {
-      formGroup = this.fb.group({
-        title: [''],
-        payment: [''],
-        dueDate: ['']
-      });
-      (this.financeForm.controls['BudgetItems'] as FormArray).push(formGroup);
-    }
-    else if (type === 'income') {
-      formGroup = this.fb.group({
-        title: [''],
-        amount: [''],
-        frequency: ['biweekly'],
-        recentPaymentDate: ['']
-      });
-      (this.financeForm.controls['IncomeItems'] as FormArray).push(formGroup);
+  addOngoingItemForm(type: 'budget' | 'income' | 'onetime') {
+    switch (type) {
+      case 'budget':
+        this.addBudgetItemFormGroupWithValues('', 0, '');
+        break;
+      case 'income':
+        this.addIncomeFormGroupWithValues('', 0 ,'');
+        break;
+      case 'onetime':
+        this.addOnetimeFormGroupWithValues('', 0, 'expense', '');
     }
   }
 
-  removeItem(type: 'budget' | 'income', index: number) {
-    const formArray = this.financeForm.controls[type === 'budget' ? 'BudgetItems' : 'IncomeItems'] as FormArray;
+  removeItem(type: 'budget' | 'income' | 'onetime', index: number) {
+    let formArray;
+    switch (type) {
+      case 'budget':
+        formArray = this.financeForm.controls['BudgetItems'] as FormArray;
+        break;
+      case 'income':
+        formArray = this.financeForm.controls['IncomeItems'] as FormArray;
+        break;
+      case 'onetime':
+        formArray = this.financeForm.controls['OneTimeItems'] as FormArray;
+    }
     formArray.removeAt(index);
   }
 
@@ -97,6 +104,18 @@ export class AppComponent implements OnInit {
           if (this.dateIsOnInterval(currentDate, recentPaymentDate, 7 * frequencyMultiplier)) {
           tempMainBalance += incomeItem.amount;
         }
+      }
+
+      //Process one-time items
+      for (const oneTimeItem of this.financeForm.controls['OneTimeItems'].value) {
+        const paymentDate = this.getDateFromString(this.formatCalendarDateString(oneTimeItem.dueDate));
+        console.log(`${currentDate.toLocaleDateString()} / ${paymentDate.toLocaleDateString()}`);
+        if (currentDate.toLocaleDateString() !== paymentDate.toLocaleDateString())
+          continue;
+        if (oneTimeItem.direction === 'expense')
+          tempMainBalance -= oneTimeItem.amount;
+        else
+          tempMainBalance += oneTimeItem.amount;
       }
       this.projectedBalance.push(tempMainBalance);
     }
@@ -176,7 +195,8 @@ export class AppComponent implements OnInit {
     this.addBudgetItemFormGroupWithValues("Student Loan", 166, "2024-03-28");
     this.addBudgetItemFormGroupWithValues("Verizon", 60, "2024-03-29");
     this.addBudgetItemFormGroupWithValues("Netflix", 13, "2024-03-29");
-    this.addIncomeFormGroupWithValues("Cory's paycheck", 2947, "2024-02-16");
+    this.addBudgetItemFormGroupWithValues("PSE", 250, "2024-03-29");
+    this.addIncomeFormGroupWithValues("Cory's paycheck", 2947, "2024-03-15");
   }
 
   private addBudgetItemFormGroupWithValues(title: string, payment: number, dueDate: string): void {
@@ -196,5 +216,15 @@ export class AppComponent implements OnInit {
       recentPaymentDate: [paymentReference]
     });
     (this.financeForm.controls['IncomeItems'] as FormArray).push(formGroup);
+  }
+
+  private addOnetimeFormGroupWithValues(title: string, payment: number, direction: string, date: string) {
+    let formGroup = this.fb.group({
+      title: [title],
+      amount: [payment],
+      direction: [direction],
+      dueDate: [date]
+    });
+    (this.financeForm.controls['OneTimeItems'] as FormArray).push(formGroup);
   }
 }

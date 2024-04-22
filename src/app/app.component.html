@@ -53,11 +53,33 @@
 
     <button (click)="addOngoingItemForm('income')">Add Income Item</button>
 
+    <ng-container formArrayName="OneTimeItems">
+      <div class="one-time-form-items" *ngFor="let item of financeForm.get('OneTimeItems')['controls']; let i = index" [formGroupName]="i">
+        <label>One-Time Item name</label>
+        <input type="text" formControlName="title" />
+    
+        <label>Amount</label>
+        <input type="number" formControlName="amount" />
+    
+        <label>Direction</label>
+        <select formControlName="direction">
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+    
+        <label>Payment Date</label>
+        <input type="date" formControlName="dueDate" />
+        <button (click)="removeItem('onetime', i)">Delete</button>
+      </div>
+    </ng-container>
+    
+    <button (click)="addOngoingItemForm('onetime')">Add One-time Item</button>
+
     <button type="submit" (click)="projectBudget($event)">Submit</button>
     <button (click)="addHardcodedBudget()">Prepopulate</button>
   </form>
 
-  <table>
+  <!-- <table>
     <thead>
       <tr>
         <th>Date</th>
@@ -70,7 +92,7 @@
         <td *ngFor="let balance of projectedBalance">{{ balance }}</td>
       </tr>
     </tbody>
-  </table>
+  </table> -->
 
   <ng-template ngIf="showChart">
     <div id="chart-container">
