@@ -39,6 +39,10 @@ export class AppComponent implements OnInit {
     return this.financeForm.controls["OneTimeItems"] as FormArray;
   }
 
+  get aggregateExpenses() {
+    return this.financeForm.controls["AggregateExpenses"] as FormArray;
+  }
+
   ngOnInit() {
     this.financeForm = this.fb.group({
       startDate: ['', Validators.required],
@@ -46,11 +50,12 @@ export class AppComponent implements OnInit {
       startingBalance: ['', Validators.required],
       BudgetItems: this.fb.array([]),
       IncomeItems: this.fb.array([]),
-      OneTimeItems: this.fb.array([])
+      OneTimeItems: this.fb.array([]),
+      AggregateExpenses: this.fb.array([])
     });
   }
 
-  addOngoingItemForm(type: 'budget' | 'income' | 'onetime') {
+  addFormGroup(type: 'budget' | 'income' | 'onetime' | 'aggregate') {
     switch (type) {
       case 'budget':
         this.addBudgetItemFormGroupWithValues('', 0, '');
@@ -60,10 +65,13 @@ export class AppComponent implements OnInit {
         break;
       case 'onetime':
         this.addOnetimeFormGroupWithValues('', 0, 'expense', '');
+        break;
+      case 'aggregate':
+        this.addAggregateFormGroupWithValues('', 0, 0);
     }
   }
 
-  removeItem(type: 'budget' | 'income' | 'onetime', index: number) {
+  removeItem(type: 'budget' | 'income' | 'onetime' | 'aggregate', index: number) {
     let formArray;
     switch (type) {
       case 'budget':
@@ -74,6 +82,9 @@ export class AppComponent implements OnInit {
         break;
       case 'onetime':
         formArray = this.financeForm.controls['OneTimeItems'] as FormArray;
+        break;
+      case 'aggregate':
+        formArray = this.financeForm.controls['AggregateExpenses'] as FormArray;
     }
     formArray.removeAt(index);
   }
@@ -82,7 +93,6 @@ export class AppComponent implements OnInit {
     event.preventDefault();
     this.projectedBalance = [];
 
-    const startDateVal = this.financeForm.get('startDate');
     let start = new Date(this.financeForm.get('startDate')!.value)
     let end = new Date(this.financeForm.get('endDate')!.value);
     let diff = this.calcDaysDiff(start, end);
@@ -109,7 +119,6 @@ export class AppComponent implements OnInit {
       //Process one-time items
       for (const oneTimeItem of this.financeForm.controls['OneTimeItems'].value) {
         const paymentDate = this.getDateFromString(this.formatCalendarDateString(oneTimeItem.dueDate));
-        console.log(`${currentDate.toLocaleDateString()} / ${paymentDate.toLocaleDateString()}`);
         if (currentDate.toLocaleDateString() !== paymentDate.toLocaleDateString())
           continue;
         if (oneTimeItem.direction === 'expense')
@@ -117,6 +126,13 @@ export class AppComponent implements OnInit {
         else
           tempMainBalance += oneTimeItem.amount;
       }
+      
+      //Process aggregate expenses
+      for (const aggregateItem of this.financeForm.controls['AggregateExpenses'].value) {
+        tempMainBalance = this.calculateAggregateExpenseChange(aggregateItem, tempMainBalance, date, start);
+      }
+
+      //Add the final balance for the day
       this.projectedBalance.push(tempMainBalance);
     }
     this.enableChart();
@@ -196,6 +212,9 @@ export class AppComponent implements OnInit {
     this.addBudgetItemFormGroupWithValues("Verizon", 60, "2024-03-29");
     this.addBudgetItemFormGroupWithValues("Netflix", 13, "2024-03-29");
     this.addBudgetItemFormGroupWithValues("PSE", 250, "2024-03-29");
+    this.addAggregateFormGroupWithValues("Groceries", 600, 7);
+    this.addAggregateFormGroupWithValues("Pathfinder Gas", 225, 14);
+    this.addAggregateFormGroupWithValues("Accent Gas", 150, 7);
     this.addIncomeFormGroupWithValues("Cory's paycheck", 2947, "2024-03-15");
   }
 
@@ -226,5 +245,24 @@ export class AppComponent implements OnInit {
       dueDate: [date]
     });
     (this.financeForm.controls['OneTimeItems'] as FormArray).push(formGroup);
+  }
+
+  private addAggregateFormGroupWithValues(title: string, amount: number, interval: number) {
+    let formGroup = this.fb.group({
+      title: [title],
+      amount: [amount],
+      interval: [interval]
+    });
+    (this.financeForm.controls['AggregateExpenses'] as FormArray).push(formGroup);
+  }
+
+  private calculateAggregateExpenseChange(aggregateExpenseForm: any, tempMainBalance: number, currentDate: string, startDate: Date): number {
+    const numIntervals = Math.round(30 / aggregateExpenseForm.interval);
+    const installmentAmount = Math.round(aggregateExpenseForm.amount / numIntervals);
+    const numDaysPast = this.calcDaysDiff(startDate, new Date(currentDate));
+    if (numDaysPast % aggregateExpenseForm.interval === 0)
+      tempMainBalance -= installmentAmount;
+
+    return tempMainBalance;
   }
 }

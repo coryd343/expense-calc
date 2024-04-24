@@ -29,7 +29,7 @@
       </div>
     </ng-container>
     
-    <button (click)="addOngoingItemForm('budget')">Add Budget Item</button>
+    <button (click)="addFormGroup('budget')">Add Budget Item</button>
     
     <ng-container formArrayName="IncomeItems">
       <div class="income-form-items" *ngFor="let item of financeForm.get('IncomeItems')['controls']; let i = index" [formGroupName]="i">
@@ -51,7 +51,7 @@
       </div>
     </ng-container>
 
-    <button (click)="addOngoingItemForm('income')">Add Income Item</button>
+    <button (click)="addFormGroup('income')">Add Income Item</button>
 
     <ng-container formArrayName="OneTimeItems">
       <div class="one-time-form-items" *ngFor="let item of financeForm.get('OneTimeItems')['controls']; let i = index" [formGroupName]="i">
@@ -73,7 +73,24 @@
       </div>
     </ng-container>
     
-    <button (click)="addOngoingItemForm('onetime')">Add One-time Item</button>
+    <button (click)="addFormGroup('onetime')">Add One-time Item</button>
+
+    <ng-container formArrayName="AggregateExpenses">
+      <div class="aggregate-expense-form" *ngFor="let item of financeForm.get('AggregateExpenses')['controls']; let i = index" [formGroupName]="i">
+        <label>Aggregate Expense Name</label>
+        <input type="text" formControlName="title" />
+    
+        <label>Monthly Amount</label>
+        <input type="number" formControlName="amount" />
+    
+        <label>Interval (days)</label>
+        <input type="number" formControlName="interval" />
+
+        <button (click)="removeItem('aggregate', i)">Delete</button>
+      </div>
+    </ng-container>
+    
+    <button (click)="addFormGroup('aggregate')">Add Aggregate Expense</button>
 
     <button type="submit" (click)="projectBudget($event)">Submit</button>
     <button (click)="addHardcodedBudget()">Prepopulate</button>
