@@ -53,6 +53,11 @@ export class AppComponent implements OnInit {
       OneTimeItems: this.fb.array([]),
       AggregateExpenses: this.fb.array([])
     });
+
+    //Load previous budget from LocalStorage, if it exists.
+    const prevBudget = localStorage.getItem('budget');
+    if (this.jsonIsValidBudget(prevBudget))
+      this.setBudgetFromJson(prevBudget);
   }
 
   addFormGroup(type: 'budget' | 'income' | 'onetime' | 'aggregate') {
@@ -91,6 +96,7 @@ export class AppComponent implements OnInit {
 
   projectBudget(event: Event) {
     event.preventDefault();
+    this.saveBudget();
     this.projectedBalance = [];
 
     let start = new Date(this.financeForm.get('startDate')!.value)
@@ -200,11 +206,14 @@ export class AppComponent implements OnInit {
 
   public addHardcodedBudget() {
     this.addBudgetItemFormGroupWithValues("Hospital", 176, "2024-03-01");
+    this.addBudgetItemFormGroupWithValues("AMFam Insurance", 240, "2024-03-11");
+    this.addBudgetItemFormGroupWithValues("Arrow Insurance", 99, "2024-03-22");
+    this.addBudgetItemFormGroupWithValues("Safeco Insurance", 230, "2024-08-22");
     this.addBudgetItemFormGroupWithValues("COTN", 39, "2024-03-03");
     this.addBudgetItemFormGroupWithValues("Slate CC", 550, "2024-03-13");
-    this.addBudgetItemFormGroupWithValues("BCC Tuition", 280, "2024-03-15");
+    this.addBudgetItemFormGroupWithValues("BCC Tuition", 530, "2024-03-15");
     this.addBudgetItemFormGroupWithValues("WM", 80, "2024-03-22");
-    this.addBudgetItemFormGroupWithValues("Astound", 99, "2024-03-24");
+    this.addBudgetItemFormGroupWithValues("Astound", 111, "2024-03-24");
     this.addBudgetItemFormGroupWithValues("HELOC", 1500, "2024-03-25");
     this.addBudgetItemFormGroupWithValues("Peninsula CC", 48, "2024-03-25");
     this.addBudgetItemFormGroupWithValues("Cory's CC", 40, "2024-03-26");
@@ -212,9 +221,11 @@ export class AppComponent implements OnInit {
     this.addBudgetItemFormGroupWithValues("Verizon", 60, "2024-03-29");
     this.addBudgetItemFormGroupWithValues("Netflix", 13, "2024-03-29");
     this.addBudgetItemFormGroupWithValues("PSE", 250, "2024-03-29");
+    this.addBudgetItemFormGroupWithValues("Edward Jones", 100, "2024-03-09");
     this.addAggregateFormGroupWithValues("Groceries", 600, 7);
     this.addAggregateFormGroupWithValues("Pathfinder Gas", 225, 14);
     this.addAggregateFormGroupWithValues("Accent Gas", 150, 7);
+    this.addAggregateFormGroupWithValues("Misc Spending", 1025, 2);
     this.addIncomeFormGroupWithValues("Cory's paycheck", 2947, "2024-03-15");
   }
 
@@ -264,5 +275,36 @@ export class AppComponent implements OnInit {
       tempMainBalance -= installmentAmount;
 
     return tempMainBalance;
+  }
+
+  public saveBudget(): void {
+    localStorage.setItem('budget', JSON.stringify(this.financeForm.value));
+  }
+
+  public jsonIsValidBudget(budgetJson): boolean {
+    if (!budgetJson) return false;
+
+    const budget = JSON.parse(budgetJson);
+    return budget.hasOwnProperty('startDate')
+    && budget.hasOwnProperty('endDate')
+    && budget.hasOwnProperty('BudgetItems')
+    && budget.hasOwnProperty('IncomeItems')
+    && budget.hasOwnProperty('OneTimeItems')
+    && budget.hasOwnProperty('AggregateExpenses');
+  }
+
+  public setBudgetFromJson(budgetJson): void {
+    if (!this.jsonIsValidBudget) return;
+    const budget = JSON.parse(budgetJson);
+
+    this.financeForm.patchValue({
+      startDate: budget.startDate,
+      endDate: budget.endDate,
+      startingBalance: budget.startingBalance
+    });
+    budget.BudgetItems.forEach((item) => {this.addBudgetItemFormGroupWithValues(item.title, item.payment, item.dueDate)});
+    budget.IncomeItems.forEach((item) => this.addIncomeFormGroupWithValues(item.title, item.amount, item.recentPaymentDate));
+    budget.OneTimeItems.forEach((item) => this.addOnetimeFormGroupWithValues(item.title, item.amount, item.direction, item.dueDate));
+    budget.AggregateExpenses.forEach((item) => this.addAggregateFormGroupWithValues(item.title, item.amount, item.interval));
   }
 }

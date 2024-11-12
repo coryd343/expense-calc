@@ -96,21 +96,6 @@
     <button (click)="addHardcodedBudget()">Prepopulate</button>
   </form>
 
-  <!-- <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th *ngFor="let date of dateList">{{ date }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Checking Account</td>
-        <td *ngFor="let balance of projectedBalance">{{ balance }}</td>
-      </tr>
-    </tbody>
-  </table> -->
-
   <ng-template ngIf="showChart">
     <div id="chart-container">
       <canvas id="chart-1"></canvas>
